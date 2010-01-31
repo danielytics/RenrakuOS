@@ -1,7 +1,9 @@
 namespace Renraku.Kernel
 
+import System.Collections.Generic
+
 class EventHandler:
-	event as object
+	eventObject as object
 	handler as callable
 	
 	def constructor (e as object, h as callable):
@@ -12,9 +14,9 @@ public class Capsule:
 	# Each capsule has a reference to a single context.
 	CurrentContext as Context
 	# A capsule may have zero or more tasks.
-	Tasks as (Task)
+	Tasks as List [of Task]
 	# A capsule may have zero or more event handlers
-	Handlers as (EventHandler)
+	Handlers as List [of EventHandler]
 	
 	public Service [id as string] as IService:
 		get:
@@ -25,9 +27,12 @@ public class Capsule:
 	
 	def constructor (ctx as Context):
 		CurrentContext = ctx
+		Tasks = List()
+		Handlers = List()
 	
 	private _CreateTask (taskServ as ITaskProvider, task as TaskCallable, arguments as (object), run as bool) as Task:
 		task = taskServ.NewTask(task, arguments)
+		Tasks.Add(task)
 		if run:
 			task.Start()
 		return task
@@ -60,7 +65,8 @@ public class Capsule:
 	def CreateAndRunTask (task as TaskCallable, arguments as (object)):
 		CreateTask(task, arguments, true)
 	
-	def RegisterEvent (event as object, handler as callable):
-		eventHandler = EventHandler(event, handler)
-		Handlers += eventHandler
+	def RegisterEvent (eventObject as object, handler as callable):
+		eventHandler = EventHandler(eventObject, handler)
+		Handlers.Add(eventHandler)
+		eventObject.Add(handler)
 	
